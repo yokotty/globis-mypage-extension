@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "GLOBIS マイページ拡張",
+  "version": "0.2.0",
+  "description": "GLOBIS VC のマイページ向け補助機能を ON/OFF できます。",
+  "permissions": [
+    "storage",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/*"
+  ],
+  "oauth2": {
+    "client_id": "989370473965-8usmc90m8ttts3b1qlfi9he955sgkn2q.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar.events"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "injected.js"
+      ],
+      "matches": [
+        "https://vc.globis.ac.jp/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_title": "GLOBIS マイページ拡張",
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "popup.html",
+    "open_in_tab": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://vc.globis.ac.jp/*"
+      ],
+      "js": [
+        "shared.js",
+        "content.js",
+        "schedule_parser.js",
+        "community_parser.js",
+        "modal_row_patch.js",
+        "calendar_content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ]
+}

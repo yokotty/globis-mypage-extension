@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GLOBIS マイページ拡張</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>GLOBIS マイページ拡張</h1>
+        <p>変更は次回ページリロード時に反映されます。</p>
+      </header>
+
+      <section aria-label="機能設定">
+        <label class="toggle">
+          <input type="checkbox" data-setting="discussionAutoExpand">
+          <span>
+            <strong>未いいね投稿を自動展開</strong>
+            <small>自分の投稿を除き、more を自動クリックします。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="discussionAutoCollapseOnLike">
+          <span>
+            <strong>いいねの直後に投稿を閉じる</strong>
+            <small>いいねした投稿が開いている場合、閉じるを自動クリックします。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="compactDiscussionLayout">
+          <span>
+            <strong>ディスカッション画面をコンパクト化</strong>
+            <small>ヘッダー、タブ、ツールバーの余白を詰めます。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="notificationPreview">
+          <span>
+            <strong>メンション通知を全文表示</strong>
+            <small>通知一覧で本文をその場で読めるようにします。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="notificationDedupe">
+          <span>
+            <strong>重複通知を非表示</strong>
+            <small>本文先頭が同じメンション/リアクション通知をまとめます。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="recentPostsInlineExpand">
+          <span>
+            <strong>最近の投稿を画面内で展開</strong>
+            <small>ホームの投稿本文をページ遷移せずに開閉します。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="profileEmailCopy">
+          <span>
+            <strong>プロフィールのメールをコピー</strong>
+            <small>プロフィール画面のメールアドレス横にコピーボタンを表示します。</small>
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" data-setting="googleCalendarSync">
+          <span>
+            <strong>Googleカレンダー登録ボタンを表示</strong>
+            <small>授業、イベント、勉強会の予定を Google カレンダーに登録できます。</small>
+          </span>
+        </label>
+      </section>
+
+      <footer>
+        <button type="button" id="reset">初期設定に戻す</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </footer>
+    </main>
+    <script src="shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
