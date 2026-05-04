@@ -5,6 +5,7 @@
   const inputs = Array.from(document.querySelectorAll("[data-setting]"));
   const statusEl = document.getElementById("status");
   const resetButton = document.getElementById("reset");
+  let currentSettings = logic.normalizeSettings();
 
   function setStatus(text) {
     statusEl.textContent = text;
@@ -32,6 +33,18 @@
     });
   }
 
+  function sendMessage(message) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(response);
+      });
+    });
+  }
+
   function render(settings) {
     for (const input of inputs) {
       input.checked = Boolean(settings[input.dataset.setting]);
@@ -46,20 +59,51 @@
     return settings;
   }
 
+  async function requireCalendarReauth() {
+    try {
+      const response = await sendMessage({ type: "GLOBIS_REQUIRE_CALENDAR_REAUTH" });
+      return Boolean(response && response.ok);
+    } catch (_error) {
+      return false;
+    }
+  }
+
   async function init() {
-    render(await loadSettings());
+    currentSettings = await loadSettings();
+    render(currentSettings);
 
     for (const input of inputs) {
       input.addEventListener("change", async () => {
-        await saveSettings(readForm());
+        const key = input.dataset.setting;
+        const wasGoogleCalendarSyncEnabled = currentSettings.googleCalendarSync;
+        const nextSettings = readForm();
+
+        await saveSettings(nextSettings);
+        currentSettings = nextSettings;
+
+        if (key === "googleCalendarSync") {
+          if (input.checked && !wasGoogleCalendarSyncEnabled) {
+            await requireCalendarReauth();
+            setStatus("保存しました");
+            return;
+          }
+
+          if (!input.checked) {
+            sendMessage({ type: "GLOBIS_CLEAR_CALENDAR_AUTH" }).catch(() => {});
+          }
+        }
+
         setStatus("保存しました");
       });
     }
 
     resetButton.addEventListener("click", async () => {
       const defaults = logic.normalizeSettings();
+      const shouldRequireCalendarReauth = defaults.googleCalendarSync && !currentSettings.googleCalendarSync;
       await saveSettings(defaults);
+      if (shouldRequireCalendarReauth) await requireCalendarReauth();
       render(defaults);
+      currentSettings = defaults;
       setStatus("初期化しました");
     });
   }

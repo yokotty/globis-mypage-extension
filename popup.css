@@ -82,6 +82,24 @@ footer {
   margin-top: 10px;
 }
 
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.legal-links a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  text-decoration: underline;
+}
+
 button {
   border: 1px solid #c9d2df;
   border-radius: 7px;

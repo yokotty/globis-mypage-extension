@@ -3,6 +3,7 @@
   "name": "GLOBIS マイページ拡張",
   "version": "0.2.0",
   "description": "GLOBIS VC のマイページ向け補助機能を ON/OFF できます。",
+  "homepage_url": "https://yokotty.dev/globis-mypage-extension/",
   "permissions": [
     "storage",
     "identity"
@@ -13,7 +14,7 @@
   "oauth2": {
     "client_id": "989370473965-5d627ntpvk6e9n8e56imh6qbg68nfr1k.apps.googleusercontent.com",
     "scopes": [
-      "https://www.googleapis.com/auth/calendar.events"
+      "https://www.googleapis.com/auth/calendar.events.owned"
     ]
   },
   "background": {
@@ -44,6 +45,7 @@
       ],
       "js": [
         "shared.js",
+        "profile_email_copy.js",
         "content.js",
         "schedule_parser.js",
         "community_parser.js",

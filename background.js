@@ -1,8 +1,9 @@
 importScripts("calendar_payload.js");
 importScripts("calendar_dedupe.js");
 
-const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events.owned";
 const CALENDAR_ID = "primary";
+const CALENDAR_REAUTH_REQUIRED_KEY = "globisCalendarReauthRequired";
 
 const getAuthToken = (interactive) =>
   new Promise((resolve, reject) => {
@@ -23,6 +24,49 @@ const removeToken = (token) =>
   new Promise((resolve) => {
     chrome.identity.removeCachedAuthToken({ token }, () => resolve());
   });
+
+const isCalendarReauthRequired = () =>
+  new Promise((resolve) => {
+    chrome.storage.local.get(CALENDAR_REAUTH_REQUIRED_KEY, (result) => {
+      resolve(Boolean(result && result[CALENDAR_REAUTH_REQUIRED_KEY]));
+    });
+  });
+
+const setCalendarReauthRequired = (required) =>
+  new Promise((resolve) => {
+    if (!required) {
+      chrome.storage.local.remove(CALENDAR_REAUTH_REQUIRED_KEY, resolve);
+      return;
+    }
+    chrome.storage.local.set({ [CALENDAR_REAUTH_REQUIRED_KEY]: true }, resolve);
+  });
+
+const clearAuthTokens = () =>
+  new Promise((resolve) => {
+    if (chrome.identity.clearAllCachedAuthTokens) {
+      chrome.identity.clearAllCachedAuthTokens(() => resolve());
+      return;
+    }
+
+    chrome.identity.getAuthToken({ interactive: false, scopes: [CALENDAR_SCOPE] }, (token) => {
+      if (chrome.runtime.lastError || !token) {
+        resolve();
+        return;
+      }
+      chrome.identity.removeCachedAuthToken({ token }, () => resolve());
+    });
+  });
+
+const getCalendarToken = async () => {
+  if (await isCalendarReauthRequired()) {
+    await clearAuthTokens();
+    const token = await getAuthToken(true);
+    await setCalendarReauthRequired(false);
+    return token;
+  }
+
+  return getAuthToken(true);
+};
 
 const calendarApiRequest = async (token, url, options = {}) => {
   const res = await fetch(url, {
@@ -45,13 +89,14 @@ const calendarApiRequest = async (token, url, options = {}) => {
 };
 
 const requestWithRetry = async (requestFn) => {
-  let token = await getAuthToken(true);
+  let token = await getCalendarToken();
   try {
     return await requestFn(token);
   } catch (err) {
     if (err.status === 401) {
       await removeToken(token);
-      token = await getAuthToken(true);
+      await setCalendarReauthRequired(true);
+      token = await getCalendarToken();
       return requestFn(token);
     }
     throw err;
@@ -119,7 +164,25 @@ const createEvents = async ({ row, sessions, sourceUrl }) => {
 };
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (!msg || msg.type !== "GLOBIS_CREATE_CALENDAR_EVENTS") return;
+  if (!msg) return;
+
+  if (msg.type === "GLOBIS_REQUIRE_CALENDAR_REAUTH") {
+    setCalendarReauthRequired(true)
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+
+    return true;
+  }
+
+  if (msg.type === "GLOBIS_CLEAR_CALENDAR_AUTH") {
+    Promise.all([clearAuthTokens(), setCalendarReauthRequired(true)])
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+
+    return true;
+  }
+
+  if (msg.type !== "GLOBIS_CREATE_CALENDAR_EVENTS") return;
 
   createEvents(msg.payload)
     .then((result) => sendResponse({ ok: true, result }))

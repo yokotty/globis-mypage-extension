@@ -2,6 +2,7 @@
   "use strict";
 
   const logic = globalThis.GlobisMypageLogic;
+  const profileEmailCopy = globalThis.GlobisProfileEmailCopy;
   const RUN_DELAYS_MS = [0, 500, 1200, 2500, 5000];
   const NOTIFICATION_OBS_DEBOUNCE_MS = 200;
   const NOTIFICATION_PERIODIC_MS = 2000;
@@ -626,39 +627,6 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  function isEmailText(text) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((text || "").trim());
-  }
-
-  function getProfileModalRoot() {
-    const modal = document.querySelector("#base-modal");
-    if (!modal) return null;
-    const title = modal.querySelector("h2");
-    if (!title || !title.textContent.includes("プロフィール")) return null;
-    return modal;
-  }
-
-  function getProfileEmailRows(root = document) {
-    const modal = root.matches && root.matches("#base-modal")
-      ? root
-      : getProfileModalRoot();
-    if (!modal) return [];
-
-    const labels = Array.from(modal.querySelectorAll('label[for="mail"], label[for="alumniMail"]'));
-    return labels
-      .map((label) => {
-        let row = label.parentElement;
-        for (let depth = 0; row && depth < 5; depth += 1, row = row.parentElement) {
-          const emailEl = row.querySelector("span.text-\\[13px\\]");
-          if (emailEl && isEmailText(emailEl.textContent)) {
-            return { row, label, emailEl };
-          }
-        }
-        return null;
-      })
-      .filter(Boolean);
-  }
-
   function fallbackCopyText(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
@@ -700,7 +668,8 @@
 
   function enhanceProfileEmailCopyButtons(root = document) {
     if (!document.body) return;
-    const rows = getProfileEmailRows(root);
+    if (!profileEmailCopy) return;
+    const rows = profileEmailCopy.getProfileEmailRows(root);
     if (rows.length === 0) return;
 
     injectNotificationStyle();
