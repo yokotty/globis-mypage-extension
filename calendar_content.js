@@ -142,6 +142,48 @@
     return `${subject} ${base}`;
   };
 
+  const findAncestor = (el, predicate, maxDepth = 8) => {
+    let cur = el;
+    for (let depth = 0; cur && depth < maxDepth; depth += 1, cur = cur.parentElement) {
+      if (predicate(cur)) return cur;
+    }
+    return null;
+  };
+
+  const findClassJoinBlock = (participateLabel) =>
+    participateLabel.closest(".todo-item") ||
+    findAncestor(
+      participateLabel,
+      (el) => {
+        const text = normalize(el.textContent);
+        return text.includes("授業に参加") &&
+          text.includes("開催日時") &&
+          /\d{4}\/\d{1,2}\/\d{1,2}/.test(text) &&
+          /\d{1,2}:\d{2}\s*[～~\-]\s*\d{1,2}:\d{2}/.test(text);
+      },
+      10
+    );
+
+  const findClassJoinDateInfoBlock = (root) => {
+    const divs = [...root.querySelectorAll("div")];
+    const hasDateTime = (div) => {
+      const text = normalize(div.textContent);
+      return text.includes("開催日時") &&
+        /\d{4}\/\d{1,2}\/\d{1,2}/.test(text) &&
+        /\d{1,2}:\d{2}\s*[～~\-]\s*\d{1,2}:\d{2}/.test(text);
+    };
+
+    return divs.find((div) => {
+      const label = normalize(div.querySelector(":scope > span:first-of-type")?.textContent || "");
+      return label.includes("開催日時") && hasDateTime(div);
+    }) || divs.find((div) => {
+      const text = normalize(div.textContent);
+      return text.includes("開催日時") &&
+        /\d{4}\/\d{1,2}\/\d{1,2}/.test(text) &&
+        /\d{1,2}:\d{2}\s*[～~\-]\s*\d{1,2}:\d{2}/.test(text);
+    });
+  };
+
   const parseDaySessionFromAccordion = (accordion) => {
     const dayHead = normalize(accordion.querySelector("h3")?.textContent || "");
     const dayNo = Number((dayHead.match(/Day\s*(\d+)/i) || [])[1] || 0);
@@ -150,14 +192,14 @@
     const participateLabel = [...accordion.querySelectorAll("span")]
       .find((el) => normalize(el.textContent) === "授業に参加");
     if (!participateLabel) return null;
-    const todoItem = participateLabel.closest(".todo-item");
+    const todoItem = findClassJoinBlock(participateLabel);
     if (!todoItem) return null;
 
-    const dateInfoBlock = [...todoItem.querySelectorAll("div")]
-      .find((div) => normalize(div.querySelector(":scope > span:first-of-type")?.textContent) === "開催日時：");
+    const dateInfoBlock = findClassJoinDateInfoBlock(todoItem);
     if (!dateInfoBlock) return null;
 
-    const dateTimeText = normalize(dateInfoBlock.querySelector(":scope > span:nth-of-type(2)")?.textContent || "");
+    const detailTextSpan = dateInfoBlock.querySelector(":scope > span:nth-of-type(2)");
+    const dateTimeText = normalize(detailTextSpan?.textContent || dateInfoBlock.textContent || "");
     const dtMatch = dateTimeText.match(/(\d{4}\/\d{1,2}\/\d{1,2}).*?(\d{1,2}:\d{2})\s*[～~\-]\s*(\d{1,2}:\d{2})\s*([A-Z]{2,5})?/);
     if (!dtMatch) return null;
 
