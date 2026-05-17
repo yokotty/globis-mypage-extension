@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "GLOBIS マイページ拡張",
   "version": "1.0.1",
-  "description": "GLOBIS VC のマイページ向け補助機能を ON/OFF できます。",
+  "description": "GLOBIS のマイページ向け補助機能を ON/OFF できます。",
   "homepage_url": "https://yokotty.dev/globis-mypage-extension/",
   "permissions": [
     "storage",

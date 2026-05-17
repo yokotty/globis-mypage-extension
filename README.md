@@ -1,6 +1,6 @@
 # GLOBIS マイページ拡張
 
-GLOBIS VC マイページ向けの補助機能を1つに統合した Chrome 拡張です。  
+GLOBIS のマイページ向けの補助機能を1つに統合した Chrome 拡張です。  
 ポップアップから機能ごとに ON/OFF を切り替えられます。
 
 ## Features
